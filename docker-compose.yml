@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  rust-transformer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rust-transformer-demo
+    networks:
+      - isolated-network
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:unconfined  # May need for Rust runtime
+    cap_drop:
+      - ALL
+    cap_add:
+      - SYS_PTRACE  # Only if needed for debugging
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=100m
+    mem_limit: 512m
+    cpus: 1.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=rust-transformer"
+    restart: "no"
+
+  # Log monitoring service
+  log-monitor:
+    image: alpine:latest
+    container_name: transformer-monitor
+    networks:
+      - isolated-network
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./logs:/app/logs
+    command: >
+      sh -c '
+        echo "Starting log monitor for rust-transformer..."
+        mkdir -p /app/logs
+        
+        # Wait for main container to start
+        sleep 2
+        
+        # Find the container log file
+        CONTAINER_ID=$$(docker ps -q --filter "name=rust-transformer-demo")
+        if [ ! -z "$$CONTAINER_ID" ]; then
+          LOG_PATH="/var/lib/docker/containers/$$CONTAINER_ID/$$CONTAINER_ID-json.log"
+          echo "Monitoring logs at: $$LOG_PATH"
+          
+          # Stream logs with timestamps
+          tail -f "$$LOG_PATH" 2>/dev/null | tee /app/logs/transformer-execution.log || echo "Log file not found"
+        else
+          echo "Container not found for monitoring"
+        fi
+      '
+    depends_on:
+      - rust-transformer
+    restart: "no"
+
+networks:
+  isolated-network:
+    driver: bridge
+    internal: true  # No external network access
