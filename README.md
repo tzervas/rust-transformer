@@ -1,5 +1,10 @@
 # Rust Transformer
 
+<!-- FLEET-BADGES:BEGIN -->
+[![CI](https://github.com/tzervas/rust-transformer/actions/workflows/fleet-ci.yml/badge.svg?branch=main)](https://github.com/tzervas/rust-transformer/actions/workflows/fleet-ci.yml?query=branch%3Amain)
+[![Security](https://github.com/tzervas/rust-transformer/actions/workflows/fleet-security.yml/badge.svg?branch=main)](https://github.com/tzervas/rust-transformer/actions/workflows/fleet-security.yml?query=branch%3Amain)
+<!-- FLEET-BADGES:END -->
+
 A Transformer implementation in Rust for learning and experimentation purposes.
 
 ## Status
